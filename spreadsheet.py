@@ -2,49 +2,48 @@ import gspread, time
 from InstagramAPI import InstagramAPI
 from oauth2client.service_account import ServiceAccountCredentials
 
+#gspread_authorize
 scope = ['https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
 client = gspread.authorize(creds)
+
+#gspread_sheet
 sheet = client.open('Followers').sheet1
-userindex=2
-usernames=[]
+
+#instagram_authorize
 InstagramAPI = InstagramAPI('UNAME', 'PWORD')
 InstagramAPI.login()
 InstagramAPI.getProfileData()
 
+
+userindex=2
+usernames=[]
 followers = InstagramAPI.getTotalSelfFollowers()
 following = InstagramAPI.getTotalSelfFollowings()
+
+def update(user, userindex):
+    totalposts = len(InstagramAPI.getTotalUserFeed('%d' % user['pk']))
+    totalfollowers = len(InstagramAPI.getTotalFollowers('%d' % user['pk']))
+    totalfollowing = len(InstagramAPI.getTotalFollowings('%d' % user['pk']))
+    print(user)
+    print(user['pk'], user['username'], user['full_name'], totalposts, totalfollowers, totalfollowing)
+    sheet.update_cell(userindex, 1,'=IMAGE("%s",4,50,50)' % user['profile_pic_url'])
+    sheet.update_cell(userindex, 2,'=HYPERLINK("https://www.instagram.com/%s/","%s")' % (user['username'], user['username']))
+    sheet.update_cell(userindex, 3, '%s' % user['full_name'])
+    sheet.update_cell(userindex, 4, '%s' % totalposts)
+    sheet.update_cell(userindex, 5, '%s' % totalfollowers)
+    sheet.update_cell(userindex, 6, '%s' % totalfollowing)
 
 for i in following:
     usernames.append(i['username'])
 
 for user in followers:
     if user['username'] in usernames:
-        totalposts = len(InstagramAPI.getTotalUserFeed('%d' % user['pk']))
-        totalfollowers = len(InstagramAPI.getTotalFollowers('%d' % user['pk']))
-        totalfollowing = len(InstagramAPI.getTotalFollowings('%d' % user['pk']))
-        print(user)
-        print(user['pk'], user['username'], user['full_name'], totalposts, totalfollowers, totalfollowing)
-        sheet.update_cell(userindex, 1, '=IMAGE("%s",4,50,50)' % user['profile_pic_url'])
-        sheet.update_cell(userindex, 2, '=HYPERLINK("https://www.instagram.com/%s/","%s")' % (user['username'], user['username']))
-        sheet.update_cell(userindex, 3, '%s' % user['full_name'])
-        sheet.update_cell(userindex, 4, '%s' % totalposts)
-        sheet.update_cell(userindex, 5, '%s' % totalfollowers)
-        sheet.update_cell(userindex, 6, '%s' % totalfollowing)
+        update(user, userindex)
         userindex += 1
         time.sleep(1)
     elif user['username'] not in usernames and user['is_private'] is False:
-        totalposts = len(InstagramAPI.getTotalUserFeed('%d' % user['pk']))
-        totalfollowers = len(InstagramAPI.getTotalFollowers('%d' % user['pk']))
-        totalfollowing = len(InstagramAPI.getTotalFollowings('%d' % user['pk']))
-        print(user)
-        print(user['pk'], user['username'], user['full_name'], totalposts, totalfollowers, totalfollowing)
-        sheet.update_cell(userindex, 1, '=IMAGE("%s",4,50,50)' % user['profile_pic_url'])
-        sheet.update_cell(userindex, 2, '=HYPERLINK("https://www.instagram.com/%s/","%s")' % (user['username'], user['username']))
-        sheet.update_cell(userindex, 3, '%s' % user['full_name'])
-        sheet.update_cell(userindex, 4, '%s' % totalposts)
-        sheet.update_cell(userindex, 5, '%s' % totalfollowers)
-        sheet.update_cell(userindex, 6, '%s' % totalfollowing)
+        update(user, userindex)
         userindex += 1
         time.sleep(1)
     else:
