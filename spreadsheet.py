@@ -12,7 +12,7 @@ client = gspread.authorize(creds)
 sheet = client.open('Followers').sheet1
 
 #instagram_authorize
-igapi = InstagramAPI('paunzz', 'ILoveSandwiches')
+igapi = InstagramAPI('UNAME', 'PWORD')
 igapi.login()
 igapi.getProfileData()
 
